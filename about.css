@@ -1,0 +1,136 @@
+/* css/about.css */
+
+.about-hero {
+    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), 
+                url('https://picsum.photos/id/1011/1920/1080') center/cover no-repeat;
+    height: 70vh;
+    min-height: 500px;
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    align-items: center;
+    margin-top: 4rem;
+}
+
+.about-image {
+    text-align: center;
+}
+
+.portrait {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.about-text h2 {
+    font-size: 2.6rem;
+    margin-bottom: 1.5rem;
+    color: var(--dark);
+}
+
+.about-text p {
+    font-size: 1.1rem;
+    margin-bottom: 1.4rem;
+    color: #444;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+}
+
+.stat-item h3 {
+    font-size: 2.8rem;
+    color: var(--primary);
+    line-height: 1;
+}
+
+.stat-item p {
+    color: var(--gray);
+    font-weight: 500;
+}
+
+.values {
+    padding: 5rem 0;
+}
+
+.values-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 2rem;
+}
+
+.value-card {
+    background: white;
+    padding: 2.5rem 2rem;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease;
+}
+
+.value-card:hover {
+    transform: translateY(-8px);
+}
+
+.value-card i {
+    font-size: 3.2rem;
+    color: var(--primary);
+    margin-bottom: 1.2rem;
+}
+
+.value-card h3 {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.experience {
+    padding: 5rem 0;
+}
+
+.timeline {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.timeline-item {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-year {
+    min-width: 140px;
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+
+.timeline-content h3 {
+    margin-bottom: 0.6rem;
+    color: var(--dark);
+}
+
+/* Mobile adjustments */
+@media (min-width: 769px) {
+    .about-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+    }
+    
+    .about-image {
+        text-align: right;
+    }
+}
+
