@@ -1,0 +1,185 @@
+/* css/gallery.css */
+
+.gallery-hero {
+    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), 
+                url('https://picsum.photos/id/1015/1920/1080') center/cover no-repeat;
+    height: 65vh;
+    min-height: 480px;
+}
+
+.filters {
+    padding: 2rem 0;
+    background: var(--light);
+    position: sticky;
+    top: 70px;
+    z-index: 900;
+}
+
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+}
+
+.filter-btn {
+    background: white;
+    border: 2px solid #ddd;
+    color: var(--dark);
+    padding: 10px 22px;
+    border-radius: 50px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.filter-btn:hover {
+    border-color: var(--primary);
+}
+
+.filter-btn.active {
+    background: var(--primary);
+    color: #1a1a1a;
+    border-color: var(--primary);
+}
+
+.properties {
+    padding: 4rem 0 6rem;
+}
+
+.properties-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+.property-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: all 0.4s ease;
+}
+
+.property-card:hover {
+    transform: translateY(-12px);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+}
+
+.property-image {
+    height: 260px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.property-image::after {
+    content: attr(data-type);
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0,0,0,0.75);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.property-info {
+    padding: 1.6rem;
+}
+
+.property-info h3 {
+    font-size: 1.45rem;
+    margin-bottom: 0.6rem;
+    line-height: 1.3;
+}
+
+.location {
+    color: var(--gray);
+    font-size: 0.98rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.price {
+    font-size: 1.65rem;
+    color: var(--primary);
+    font-weight: 700;
+    margin-bottom: 1.1rem;
+}
+
+.description {
+    font-size: 0.97rem;
+    color: #555;
+    line-height: 1.55;
+    margin-bottom: 1.4rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.listing-date {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 1.2rem;
+}
+
+.order-btn {
+    width: 100%;
+    background: #25D366;
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    font-size: 1.02rem;
+}
+
+.order-btn:hover {
+    background: #20b85c;
+    transform: scale(1.03);
+}
+
+.cta {
+    padding: 5rem 0;
+    text-align: center;
+}
+
+.cta-content h2 {
+    font-size: 2.4rem;
+    margin-bottom: 1rem;
+}
+
+.cta-content p {
+    font-size: 1.15rem;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    color: #555;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .filter-bar {
+        justify-content: flex-start;
+        padding: 0 10px;
+        overflow-x: auto;
+        gap: 10px;
+    }
+    
+    .property-image {
+        height: 220px;
+    }
+}
+

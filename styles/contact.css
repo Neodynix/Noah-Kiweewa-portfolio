@@ -1,0 +1,151 @@
+/* css/contact.css */
+
+.contact-hero {
+    background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.65)), 
+                url('https://picsum.photos/id/1016/1920/1080') center/cover no-repeat;
+    height: 65vh;
+    min-height: 480px;
+}
+
+.contact-info {
+    padding: 5rem 0;
+}
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.8rem;
+    margin-bottom: 4rem;
+}
+
+.contact-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.4s ease;
+    display: block;
+}
+
+.contact-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.whatsapp:hover {
+    border: 3px solid #25D366;
+}
+
+.call:hover {
+    border: 3px solid #007bff;
+}
+
+.email:hover {
+    border: 3px solid #ff6b00;
+}
+
+.contact-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1.2rem;
+    transition: transform 0.3s;
+}
+
+.contact-card:hover .contact-icon {
+    transform: scale(1.15);
+}
+
+.whatsapp .contact-icon { color: #25D366; }
+.call .contact-icon { color: #007bff; }
+.email .contact-icon { color: #ff6b00; }
+
+.contact-card h3 {
+    font-size: 1.6rem;
+    margin-bottom: 0.8rem;
+}
+
+.contact-detail {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 0.6rem;
+}
+
+.contact-action {
+    color: var(--gray);
+    font-size: 1.05rem;
+}
+
+.office-info {
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.office-info h2 {
+    margin-bottom: 2rem;
+}
+
+.office-details {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+
+.office-item {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.07);
+    display: flex;
+    gap: 1.2rem;
+    align-items: flex-start;
+}
+
+.office-item i {
+    font-size: 2rem;
+    color: var(--primary);
+    margin-top: 4px;
+}
+
+.why-contact {
+    padding: 5rem 0;
+}
+
+.why-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.why-item {
+    text-align: center;
+    padding: 2rem 1.5rem;
+}
+
+.why-item i {
+    font-size: 3rem;
+    color: var(--primary);
+    margin-bottom: 1.2rem;
+}
+
+.why-item h3 {
+    margin-bottom: 1rem;
+}
+
+/* Mobile Enhancements */
+@media (max-width: 768px) {
+    .contact-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .contact-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .office-details {
+        grid-template-columns: 1fr;
+    }
+}
