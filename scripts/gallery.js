@@ -1,24 +1,38 @@
-// scripts/gallery.js - Properties from Supabase + Smart Filter Bar
+// scripts/gallery.js - Premium Gallery Engine
 
 const SUPABASE_URL = 'https://hitmllkcwlzwdlmodwbd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpdG1sbGtjd2x6d2RsbW9kd2JkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NDg2MjgsImV4cCI6MjA5MTMyNDYyOH0.T1EEuj1_m1zz33LYz27g82rjUk2U63XmKHpSiTmzwE0';
 
-const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+let supabase;
 let allProperties = [];
-let lastScrollY = 0;
-let isFilterVisible = true;
 let sliderIntervals = [];
 
-document.addEventListener('DOMContentLoaded', async () => {
+/**
+ * Main Initialization
+ */
+async function initGallery() {
     const grid = document.getElementById('properties-grid');
-    const filterSection = document.querySelector('.filters');
-
     if (!grid) return;
 
-    grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding: 60px; color:#888;">Loading properties...</p>';
+    grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding: 60px; color:#888;">Initializing Gallery...</p>';
+
+    // 1. Wait for Supabase Library to load (Mobile optimization)
+    let attempts = 0;
+    while (!window.supabase && attempts < 20) {
+        await new Promise(res => setTimeout(res, 200));
+        attempts++;
+    }
+
+    if (!window.supabase) {
+        grid.innerHTML = '<p style="color:red; text-align:center; padding:40px;">Connection Error: Library failed to load. Please refresh.</p>';
+        return;
+    }
+
+    // 2. Connect
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     try {
+        // 3. Fetch
         const { data, error } = await supabase
             .from('properties')
             .select('*')
@@ -29,67 +43,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         allProperties = data || [];
 
         if (allProperties.length === 0) {
-            grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#666;">No properties available at the moment.</p>';
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding: 60px; color:#666;">No properties found in the database. Check RLS settings.</p>';
             return;
         }
 
         renderProperties(allProperties);
 
     } catch (err) {
-        console.error('Error fetching properties:', err);
-        grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:#e74c3c; padding: 60px;">Unable to load properties. Please try again later.</p>`;
+        grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:#e74c3c; padding: 40px;">Database Error: ${err.message}</p>`;
     }
 
-    // Setup filter buttons
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    filterButtons.forEach(btn => {
+    // 4. Setup Filters
+    document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            filterButtons.forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-
-            const filterValue = btn.getAttribute('data-filter');
-
-            if (filterValue === 'all') {
-                renderProperties(allProperties);
-            } else {
-                const filtered = allProperties.filter(p => p.type === filterValue);
-                renderProperties(filtered);
-            }
+            const type = btn.getAttribute('data-filter');
+            renderProperties(type === 'all' ? allProperties : allProperties.filter(p => p.type === type));
         });
     });
+}
 
-    // Smart Filter Bar: Hide on scroll down, Show on scroll up
-    window.addEventListener('scroll', () => {
-        const currentScrollY = window.scrollY;
-
-        if (currentScrollY > lastScrollY && currentScrollY > 300) {
-            if (isFilterVisible) {
-                filterSection.style.transform = 'translateY(-100%)';
-                filterSection.style.transition = 'transform 0.3s ease';
-                isFilterVisible = false;
-            }
-        } else {
-            if (!isFilterVisible) {
-                filterSection.style.transform = 'translateY(0)';
-                isFilterVisible = true;
-            }
-        }
-        lastScrollY = currentScrollY;
-    });
-});
-
+/**
+ * Render Cards to Grid
+ */
 function renderProperties(properties) {
     const grid = document.getElementById('properties-grid');
     grid.innerHTML = '';
-
-    // Clear any existing intervals
+    
     sliderIntervals.forEach(clearInterval);
     sliderIntervals = [];
-
-    if (properties.length === 0) {
-        grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#666; padding: 40px;">No properties found in this category.</p>';
-        return;
-    }
 
     properties.forEach(property => {
         const card = createPropertyCard(property);
@@ -99,96 +82,89 @@ function renderProperties(properties) {
     initSliders();
 }
 
-function createPropertyCard(property) {
+/**
+ * Generate Individual Card HTML
+ */
+function createPropertyCard(p) {
     const card = document.createElement('div');
     card.className = 'property-card';
-    card.setAttribute('data-id', property.id);
+    card.setAttribute('data-id', p.id);
 
-    const images = property.images && property.images.length > 0 
-        ? property.images 
-        : ['https://picsum.photos/id/1015/600/400'];
+    // Handle Image Array or String
+    let imgs = [];
+    if (Array.isArray(p.images) && p.images.length > 0) imgs = p.images;
+    else if (typeof p.images === 'string' && p.images.length > 5) imgs = [p.images];
+    else imgs = ['https://via.placeholder.com/600x400?text=Premiere+Real+Estate'];
 
-    const imagesHtml = images.map((img, index) => `
-        <div class="slide ${index === 0 ? 'active' : ''}" style="background-image: url('${img}')"></div>
+    const slidesHtml = imgs.map((img, i) => `
+        <div class="slide ${i === 0 ? 'active' : ''}" style="background-image: url('${img}')"></div>
     `).join('');
 
-    const controlsHtml = images.length > 1 ? `
+    const controlsHtml = imgs.length > 1 ? `
         <div class="slider-controls">
-            <button class="prev-slide" onclick="changeSlide('${property.id}', -1)"><i class="fas fa-chevron-left"></i></button>
-            <button class="next-slide" onclick="changeSlide('${property.id}', 1)"><i class="fas fa-chevron-right"></i></button>
+            <button onclick="changeSlide('${p.id}', -1)"><i class="fas fa-chevron-left"></i></button>
+            <button onclick="changeSlide('${p.id}', 1)"><i class="fas fa-chevron-right"></i></button>
         </div>
         <div class="slider-dots">
-            ${images.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}"></span>`).join('')}
+            ${imgs.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}"></span>`).join('')}
         </div>
     ` : '';
 
     card.innerHTML = `
-        <div class="property-image-container" data-type="${property.type || 'residential'}">
-            <div class="slides-wrapper">
-                ${imagesHtml}
-            </div>
+        <div class="property-image-container" data-type="${p.type || 'Property'}">
+            <div class="slides-wrapper">${slidesHtml}</div>
             ${controlsHtml}
         </div>
         <div class="property-info">
-            <h3>${property.title}</h3>
-            <div class="location">
-                <i class="fas fa-map-marker-alt"></i> ${property.location}
-            </div>
-            <div class="price">${property.price}</div>
-            <p class="description">
-                ${property.description ? property.description.substring(0, 140) + '...' : 'Premium property in a great location.'}
-            </p>
-            <p class="listing-date">
-                <i class="fas fa-clock"></i> Listed: ${new Date(property.created_at || property.listing_date).toLocaleDateString('en-GB')}
-            </p>
-            <button class="order-btn" onclick="orderViaWhatsApp('${property.id}', '${property.title.replace(/'/g, "\\'")}')">
+            <h3>${p.title}</h3>
+            <div class="location"><i class="fas fa-map-marker-alt"></i> ${p.location}</div>
+            <div class="price">${p.price}</div>
+            <p class="description">${p.description ? p.description.substring(0, 100) + '...' : 'Premium property available.'}</p>
+            <button class="order-btn" onclick="orderViaWhatsApp('${p.id}', '${p.title.replace(/'/g, "\\'")}')">
                 <i class="fab fa-whatsapp"></i> Inquire via WhatsApp
             </button>
-        </div>
-    `;
+        </div>`;
     return card;
 }
 
-window.changeSlide = function(propertyId, direction) {
-    const card = document.querySelector(`.property-card[data-id="${propertyId}"]`);
+/**
+ * Manual Slide Change
+ */
+window.changeSlide = function(id, dir) {
+    const card = document.querySelector(`.property-card[data-id="${id}"]`);
     if (!card) return;
-    
     const slides = card.querySelectorAll('.slide');
     const dots = card.querySelectorAll('.dot');
-    let activeIndex = Array.from(slides).findIndex(s => s.classList.contains('active'));
+    let idx = Array.from(slides).findIndex(s => s.classList.contains('active'));
 
-    slides[activeIndex].classList.remove('active');
-    if(dots.length) dots[activeIndex].classList.remove('active');
+    slides[idx].classList.remove('active');
+    if (dots.length) dots[idx].classList.remove('active');
 
-    activeIndex = (activeIndex + direction + slides.length) % slides.length;
+    idx = (idx + dir + slides.length) % slides.length;
 
-    slides[activeIndex].classList.add('active');
-    if(dots.length) dots[activeIndex].classList.add('active');
+    slides[idx].classList.add('active');
+    if (dots.length) dots[idx].classList.add('active');
 };
 
+/**
+ * Auto Slider Logic
+ */
 function initSliders() {
-    const cards = document.querySelectorAll('.property-card');
-    
-    cards.forEach(card => {
+    document.querySelectorAll('.property-card').forEach(card => {
         const slides = card.querySelectorAll('.slide');
         if (slides.length <= 1) return;
-
-        const propertyId = card.getAttribute('data-id');
-        const interval = setInterval(() => {
-            window.changeSlide(propertyId, 1);
-        }, 5000); 
-
-        sliderIntervals.push(interval);
+        const id = card.getAttribute('data-id');
+        sliderIntervals.push(setInterval(() => window.changeSlide(id, 1), 5000));
     });
 }
 
+/**
+ * WhatsApp Integration
+ */
 window.orderViaWhatsApp = function(id, title) {
-    const message = encodeURIComponent(
-        `Hi Noah,\n\n` +
-        `I'm interested in this property from your gallery:\n\n` +
-        `*${title}*\n` +
-        `Property ID: ${id}\n\n` +
-        `Please send me more photos, details, and available viewing times.\nThank you!`
-    );
-    window.open(`https://wa.me/256772492207?text=${message}`, '_blank');
+    const msg = encodeURIComponent(`Hi Noah, I'm interested in: *${title}* (ID: ${id})`);
+    window.open(`https://wa.me/256772492207?text=${msg}`, '_blank');
 };
+
+// Fire it up
+document.addEventListener('DOMContentLoaded', initGallery);
