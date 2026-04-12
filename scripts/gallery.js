@@ -1,4 +1,4 @@
-// scripts/gallery.js - Premium Gallery Engine
+// scripts/gallery.js - DEBUG MODE (FULL TRACE)
 
 const SUPABASE_URL = 'https://hitmllkcwlzwdlmodwbd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpdG1sbGtjd2x6d2RsbW9kd2JkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NDg2MjgsImV4cCI6MjA5MTMyNDYyOH0.T1EEuj1_m1zz33LYz27g82rjUk2U63XmKHpSiTmzwE0';
@@ -8,163 +8,255 @@ let allProperties = [];
 let sliderIntervals = [];
 
 /**
- * Main Initialization
+ * LOGGING SYSTEM
+ */
+function log(msg, type = "info") {
+    const style = {
+        info: "color:#3498db",
+        success: "color:#2ecc71",
+        warn: "color:#f1c40f",
+        error: "color:#e74c3c"
+    };
+    console.log(`%c[Gallery DEBUG] ${msg}`, style[type]);
+}
+
+/**
+ * INIT
  */
 async function initGallery() {
+    log("Starting gallery initialization...");
+
     const grid = document.getElementById('properties-grid');
-    if (!grid) return;
 
-    grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding: 60px; color:#888;">Initializing Gallery...</p>';
+    if (!grid) {
+        log("❌ properties-grid NOT FOUND in HTML", "error");
+        return;
+    }
 
-    // 1. Wait for Supabase Library to load (Mobile optimization)
+    grid.innerHTML = "Loading gallery...";
+
+    // 1. Check Supabase CDN
+    log("Checking Supabase library...");
+
     let attempts = 0;
-    while (!window.supabase && attempts < 20) {
+    while (!window.supabase && attempts < 30) {
         await new Promise(res => setTimeout(res, 200));
         attempts++;
     }
 
     if (!window.supabase) {
-        grid.innerHTML = '<p style="color:red; text-align:center; padding:40px;">Connection Error: Library failed to load. Please refresh.</p>';
+        log("❌ Supabase library FAILED to load", "error");
+        grid.innerHTML = "Supabase library not loaded (CDN issue)";
         return;
     }
 
-    // 2. Connect
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    log("✔ Supabase library loaded", "success");
+
+    // 2. Create client
+    try {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        log("✔ Supabase client created", "success");
+    } catch (e) {
+        log("❌ Supabase client error: " + e.message, "error");
+        grid.innerHTML = "Supabase client creation failed";
+        return;
+    }
+
+    // 3. Test connection FIRST
+    log("Testing database connection...");
 
     try {
-        // 3. Fetch
+        const test = await supabase.from('properties').select('count', { count: 'exact', head: true });
+
+        log("Connection test response received", "success");
+        console.log("Test response:", test);
+
+        if (test.error) {
+            log("❌ Supabase ERROR: " + test.error.message, "error");
+        }
+
+    } catch (err) {
+        log("❌ Connection FAILED: " + err.message, "error");
+    }
+
+    // 4. Fetch real data
+    log("Fetching properties...");
+
+    try {
         const { data, error } = await supabase
             .from('properties')
             .select('*')
             .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        console.log("Raw data:", data);
+        console.log("Raw error:", error);
 
-        allProperties = data || [];
-
-        if (allProperties.length === 0) {
-            grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding: 60px; color:#666;">No properties found in the database. Check RLS settings.</p>';
+        if (error) {
+            log("❌ DATABASE ERROR: " + error.message, "error");
+            grid.innerHTML = "Database error: " + error.message;
             return;
         }
+
+        if (!data || data.length === 0) {
+            log("⚠ No properties returned (EMPTY TABLE or RLS issue)", "warn");
+            grid.innerHTML = "No properties found. Check RLS or table data.";
+            return;
+        }
+
+        allProperties = data;
+        log(`✔ Loaded ${data.length} properties`, "success");
 
         renderProperties(allProperties);
 
     } catch (err) {
-        grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:#e74c3c; padding: 40px;">Database Error: ${err.message}</p>`;
+        log("❌ FETCH FAILED: " + err.message, "error");
+        grid.innerHTML = "Fetch failed: " + err.message;
     }
 
-    // 4. Setup Filters
+    // 5. Filters debug
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            log("Filter clicked: " + btn.dataset.filter);
+
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+
             const type = btn.getAttribute('data-filter');
-            renderProperties(type === 'all' ? allProperties : allProperties.filter(p => p.type === type));
+            const filtered = type === 'all'
+                ? allProperties
+                : allProperties.filter(p => p.type === type);
+
+            log(`Filtered results: ${filtered.length}`);
+            renderProperties(filtered);
         });
     });
 }
 
 /**
- * Render Cards to Grid
+ * RENDER
  */
 function renderProperties(properties) {
     const grid = document.getElementById('properties-grid');
-    grid.innerHTML = '';
-    
+
+    if (!grid) {
+        log("❌ Grid missing during render", "error");
+        return;
+    }
+
+    grid.innerHTML = "";
+    log(`Rendering ${properties.length} cards...`);
+
     sliderIntervals.forEach(clearInterval);
     sliderIntervals = [];
 
-    properties.forEach(property => {
-        const card = createPropertyCard(property);
-        grid.appendChild(card);
+    properties.forEach((p, i) => {
+        try {
+            const card = createPropertyCard(p);
+            grid.appendChild(card);
+        } catch (e) {
+            log(`Card render failed at index ${i}: ${e.message}`, "error");
+        }
     });
 
     initSliders();
 }
 
 /**
- * Generate Individual Card HTML
+ * CARD CREATION
  */
 function createPropertyCard(p) {
-    const card = document.createElement('div');
-    card.className = 'property-card';
-    card.setAttribute('data-id', p.id);
 
-    // Handle Image Array or String
+    if (!p) {
+        log("Null property object", "error");
+        return document.createElement('div');
+    }
+
     let imgs = [];
-    if (Array.isArray(p.images) && p.images.length > 0) imgs = p.images;
-    else if (typeof p.images === 'string' && p.images.length > 5) imgs = [p.images];
-    else imgs = ['https://via.placeholder.com/600x400?text=Premiere+Real+Estate'];
 
-    const slidesHtml = imgs.map((img, i) => `
-        <div class="slide ${i === 0 ? 'active' : ''}" style="background-image: url('${img}')"></div>
-    `).join('');
+    if (Array.isArray(p.images)) {
+        imgs = p.images;
+    } else if (typeof p.images === 'string') {
+        imgs = [p.images];
+    } else {
+        imgs = ["https://via.placeholder.com/600x400?text=No+Image"];
+        log(`Property ${p.id} has NO images`, "warn");
+    }
 
-    const controlsHtml = imgs.length > 1 ? `
-        <div class="slider-controls">
-            <button onclick="changeSlide('${p.id}', -1)"><i class="fas fa-chevron-left"></i></button>
-            <button onclick="changeSlide('${p.id}', 1)"><i class="fas fa-chevron-right"></i></button>
-        </div>
-        <div class="slider-dots">
-            ${imgs.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}"></span>`).join('')}
-        </div>
-    ` : '';
+    const card = document.createElement('div');
+    card.className = "property-card";
+    card.dataset.id = p.id;
 
     card.innerHTML = `
-        <div class="property-image-container" data-type="${p.type || 'Property'}">
-            <div class="slides-wrapper">${slidesHtml}</div>
-            ${controlsHtml}
+        <div class="property-image-container" data-type="${p.type || 'unknown'}">
+            <div class="slides-wrapper">
+                ${imgs.map((img, i) => `
+                    <div class="slide ${i === 0 ? 'active' : ''}" 
+                         style="background-image:url('${img}')"></div>
+                `).join('')}
+            </div>
         </div>
+
         <div class="property-info">
-            <h3>${p.title}</h3>
-            <div class="location"><i class="fas fa-map-marker-alt"></i> ${p.location}</div>
-            <div class="price">${p.price}</div>
-            <p class="description">${p.description ? p.description.substring(0, 100) + '...' : 'Premium property available.'}</p>
-            <button class="order-btn" onclick="orderViaWhatsApp('${p.id}', '${p.title.replace(/'/g, "\\'")}')">
-                <i class="fab fa-whatsapp"></i> Inquire via WhatsApp
-            </button>
-        </div>`;
+            <h3>${p.title || "No Title"}</h3>
+            <div>${p.location || "No location"}</div>
+            <div>${p.price || "No price"}</div>
+        </div>
+    `;
+
     return card;
 }
 
 /**
- * Manual Slide Change
- */
-window.changeSlide = function(id, dir) {
-    const card = document.querySelector(`.property-card[data-id="${id}"]`);
-    if (!card) return;
-    const slides = card.querySelectorAll('.slide');
-    const dots = card.querySelectorAll('.dot');
-    let idx = Array.from(slides).findIndex(s => s.classList.contains('active'));
-
-    slides[idx].classList.remove('active');
-    if (dots.length) dots[idx].classList.remove('active');
-
-    idx = (idx + dir + slides.length) % slides.length;
-
-    slides[idx].classList.add('active');
-    if (dots.length) dots[idx].classList.add('active');
-};
-
-/**
- * Auto Slider Logic
+ * SLIDER ENGINE
  */
 function initSliders() {
+    log("Initializing sliders...");
+
     document.querySelectorAll('.property-card').forEach(card => {
         const slides = card.querySelectorAll('.slide');
+
         if (slides.length <= 1) return;
-        const id = card.getAttribute('data-id');
-        sliderIntervals.push(setInterval(() => window.changeSlide(id, 1), 5000));
+
+        const id = card.dataset.id;
+
+        sliderIntervals.push(setInterval(() => {
+            changeSlide(id, 1);
+        }, 4000));
     });
 }
 
 /**
- * WhatsApp Integration
+ * SLIDE SWITCH
  */
-window.orderViaWhatsApp = function(id, title) {
-    const msg = encodeURIComponent(`Hi Noah, I'm interested in: *${title}* (ID: ${id})`);
-    window.open(`https://wa.me/256772492207?text=${msg}`, '_blank');
+window.changeSlide = function(id, dir) {
+    const card = document.querySelector(`.property-card[data-id="${id}"]`);
+    if (!card) {
+        log("Slide change failed: card not found", "error");
+        return;
+    }
+
+    const slides = card.querySelectorAll('.slide');
+    let idx = [...slides].findIndex(s => s.classList.contains('active'));
+
+    slides[idx].classList.remove('active');
+
+    idx = (idx + dir + slides.length) % slides.length;
+
+    slides[idx].classList.add('active');
 };
 
-// Fire it up
-document.addEventListener('DOMContentLoaded', initGallery);
+/**
+ * WHATSAPP DEBUG
+ */
+window.orderViaWhatsApp = function(id, title) {
+    log(`WhatsApp clicked: ${title}`);
+    alert(`WhatsApp debug: ${title}`);
+};
+
+/**
+ * START
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    log("DOM loaded");
+    initGallery();
+});
