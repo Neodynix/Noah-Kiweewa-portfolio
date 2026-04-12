@@ -1,4 +1,4 @@
-// scripts/gallery.js - Premiere Real Estate Engine
+// scripts/gallery.js - Optimized for Premiere Admin Logic
 const SUPABASE_URL = 'https://hitmllkcwlzwdlmodwbd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpdG1sbGtjd2x6d2RsbW9kd2JkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NDg2MjgsImV4cCI6MjA5MTMyNDYyOH0.T1EEuj1_m1zz33LYz27g82rjUk2U63XmKHpSiTmzwE0';
 
@@ -10,18 +10,15 @@ async function initGallery() {
     const grid = document.getElementById('properties-grid');
     if (!grid) return;
 
-    grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding: 60px; color:#888;">Fetching properties...</p>';
+    grid.innerHTML = '<div class="loading-state">Loading Premium Properties...</div>';
 
-    // Wait for Supabase Library
-    let attempts = 0;
-    while (!window.supabase && attempts < 20) {
-        await new Promise(res => setTimeout(res, 200));
-        attempts++;
-    }
-
+    // Ensure Supabase is ready
     if (!window.supabase) {
-        grid.innerHTML = '<p style="color:red; text-align:center; padding:40px;">Library failed to load. Please check your internet connection.</p>';
-        return;
+        await new Promise(res => {
+            const check = setInterval(() => {
+                if (window.supabase) { clearInterval(check); res(); }
+            }, 100);
+        });
     }
 
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -36,26 +33,26 @@ async function initGallery() {
         allProperties = data || [];
 
         if (allProperties.length === 0) {
-            grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; padding: 60px; color:#666;">No properties found. Please verify table data in Supabase.</p>';
+            grid.innerHTML = '<p class="empty-msg">No properties found. Check Admin Dashboard.</p>';
             return;
         }
 
         renderProperties(allProperties);
 
     } catch (err) {
-        grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:#e74c3c; padding: 40px;">Database Error: ${err.message}</p>`;
+        grid.innerHTML = `<p class="error-msg">Connection Error: ${err.message}</p>`;
     }
 
-    // Fixed Filter Logic: Case-Insensitive
+    // Filter Logic with Case-Insensitivity
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             
-            const filterValue = btn.getAttribute('data-filter').toLowerCase();
-            const filtered = filterValue === 'all' 
+            const filter = btn.dataset.filter.toLowerCase();
+            const filtered = filter === 'all' 
                 ? allProperties 
-                : allProperties.filter(p => p.type?.toLowerCase() === filterValue);
+                : allProperties.filter(p => p.type?.toLowerCase() === filter);
             
             renderProperties(filtered);
         });
@@ -66,11 +63,13 @@ function renderProperties(properties) {
     const grid = document.getElementById('properties-grid');
     grid.innerHTML = '';
     
+    // Clear old intervals to prevent phone lag
     sliderIntervals.forEach(clearInterval);
     sliderIntervals = [];
 
-    properties.forEach(property => {
-        grid.appendChild(createPropertyCard(property));
+    properties.forEach(p => {
+        const card = createPropertyCard(p);
+        grid.appendChild(card);
     });
 
     initSliders();
@@ -78,44 +77,43 @@ function renderProperties(properties) {
 
 function createPropertyCard(p) {
     const card = document.createElement('div');
-    card.className = 'property-card';
+    card.className = `property-card ${p.is_sold ? 'sold-out' : ''}`;
     card.setAttribute('data-id', p.id);
 
-    // Robust Image Handling
+    // Image logic matching admin.js upload structure
     let imgs = [];
     if (Array.isArray(p.images) && p.images.length > 0) imgs = p.images;
     else if (typeof p.images === 'string' && p.images.length > 5) imgs = [p.images];
-    else imgs = ['https://via.placeholder.com/600x400?text=Image+Coming+Soon'];
+    else imgs = ['https://via.placeholder.com/600x400?text=Premiere+Real+Estate'];
 
     const slidesHtml = imgs.map((img, i) => `
         <div class="slide ${i === 0 ? 'active' : ''}" style="background-image: url('${img}')"></div>
     `).join('');
 
-    const controlsHtml = imgs.length > 1 ? `
-        <div class="slider-controls">
-            <button onclick="changeSlide('${p.id}', -1)"><i class="fas fa-chevron-left"></i></button>
-            <button onclick="changeSlide('${p.id}', 1)"><i class="fas fa-chevron-right"></i></button>
-        </div>
-        <div class="slider-dots">
-            ${imgs.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}"></span>`).join('')}
-        </div>
-    ` : '';
+    const statusBadge = p.is_sold 
+        ? '<span class="status-badge sold">Sold</span>' 
+        : `<span class="status-badge avail">${p.type || 'Property'}</span>`;
 
-    // Clean title for JS safety
-    const safeTitle = (p.title || 'Property').replace(/'/g, "");
+    // Clean data for the WhatsApp button
+    const cleanTitle = (p.title || 'Property').replace(/['"]/g, "");
 
     card.innerHTML = `
-        <div class="property-image-container" data-type="${p.type || 'Listing'}">
+        <div class="property-image-container">
             <div class="slides-wrapper">${slidesHtml}</div>
-            ${controlsHtml}
+            ${statusBadge}
+            ${imgs.length > 1 ? `
+                <div class="slider-dots">
+                    ${imgs.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}"></span>`).join('')}
+                </div>
+            ` : ''}
         </div>
         <div class="property-info">
-            <h3>${p.title || 'Untitled'}</h3>
+            <h3>${p.title || 'New Listing'}</h3>
             <div class="location"><i class="fas fa-map-marker-alt"></i> ${p.location || 'Uganda'}</div>
             <div class="price">${p.price || 'Contact for Price'}</div>
-            <p class="description">${p.description ? p.description.substring(0, 100) + '...' : 'Premium listing by Noah Kiweewa.'}</p>
-            <button class="order-btn" onclick="orderViaWhatsApp('${p.id}', '${safeTitle}')">
-                <i class="fab fa-whatsapp"></i> Inquire via WhatsApp
+            <p class="description">${p.description ? p.description.substring(0, 80) + '...' : 'Inquire for details.'}</p>
+            <button class="order-btn" onclick="orderViaWhatsApp('${p.id}', '${cleanTitle}')">
+                <i class="fab fa-whatsapp"></i> ${p.is_sold ? 'Inquire for Similar' : 'Inquire on WhatsApp'}
             </button>
         </div>`;
     return card;
@@ -142,14 +140,13 @@ function initSliders() {
         const slides = card.querySelectorAll('.slide');
         if (slides.length <= 1) return;
         const id = card.getAttribute('data-id');
-        sliderIntervals.push(setInterval(() => window.changeSlide(id, 1), 5000));
+        sliderIntervals.push(setInterval(() => window.changeSlide(id, 1), 4500));
     });
 }
 
 window.orderViaWhatsApp = function(id, title) {
-    const phone = "256772492207";
-    const msg = encodeURIComponent(`Hi Noah, I'm interested in: *${title}* (Ref: ${id})`);
-    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+    const msg = encodeURIComponent(`Hi Noah, I'm interested in: *${title}* (ID: ${id})`);
+    window.open(`https://wa.me/256772492207?text=${msg}`, '_blank');
 };
 
 document.addEventListener('DOMContentLoaded', initGallery);
