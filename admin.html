@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Premiere Real Estate</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles/admin.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        
+        <div id="login-screen" class="login-overlay">
+            <div class="login-box">
+                <div class="login-header">
+                    <i class="fas fa-house-chimney-gold"></i>
+                    <h1>Premiere Admin</h1>
+                    <p>Enter credentials to access the console</p>
+                </div>
+                <form id="login-form">
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input p="email" id="email" placeholder="admin@premiere.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="password" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn-primary full-width">Sign In</button>
+                    <div id="login-error" class="error-text"></div>
+                </form>
+            </div>
+        </div>
+
+        <div id="dashboard" class="dashboard-layout hidden">
+            
+            <aside class="sidebar" id="sidebar">
+                <button id="sidebar-close" class="sidebar-close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+
+                <div class="sidebar-header">
+                    <i class="fas fa-hotel"></i>
+                    <span>Premiere</span>
+                </div>
+
+                <nav class="sidebar-nav">
+                    <a href="#" class="active"><i class="fas fa-th-large"></i> Properties</a>
+                    <a href="#" class="inactive-feature"><i class="fas fa-chart-line"></i> Analytics</a>
+                    <a href="#" class="inactive-feature"><i class="fas fa-envelope"></i> Inquiries</a>
+                </nav>
+
+                <div class="sidebar-footer">
+                    <div class="user-info">
+                        <i class="fas fa-user-circle"></i>
+                        <p id="admin-email">Loading...</p>
+                    </div>
+                    <button id="logout-btn" class="logout-link">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </aside>
+
+            <main class="main-content">
+                <header class="top-bar">
+                    <div class="top-bar-left">
+                        <button id="menu-toggle" class="menu-btn">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <div class="breadcrumb">
+                            <span class="muted">Dashboard</span> 
+                            <i class="fas fa-chevron-right separator"></i> 
+                            <span>Properties</span>
+                        </div>
+                    </div>
+                    <div class="top-bar-right">
+                        <div class="status-indicator">
+                            <span class="dot"></span> System Live
+                        </div>
+                    </div>
+                </header>
+
+                <div class="content-body">
+                    <div class="table-header">
+                        <h2>Property Inventory</h2>
+                        <button id="open-add-modal" class="btn-primary">
+                            <i class="fas fa-plus"></i> Add Property
+                        </button>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Property Details</th>
+                                    <th>Price</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Images</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <div id="modal" class="modal-overlay hidden">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2 id="modal-title">Property Details</h2>
+                    <button class="close-modal" id="close-modal"><i class="fas fa-times"></i></button>
+                </div>
+                
+                <form id="property-form">
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>Title *</label>
+                            <input type="text" id="title" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Location *</label>
+                            <input type="text" id="location" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Price *</label>
+                            <input type="text" id="price" placeholder="e.g. UGX 850M" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Type</label>
+                            <select id="type">
+                                <option value="residential">Residential</option>
+                                <option value="apartment">Apartment</option>
+                                <option value="land">Land</option>
+                                <option value="commercial">Commercial</option>
+                            </select>
+                        </div>
+                        <div class="input-group full-width">
+                            <label>Description</label>
+                            <textarea id="description" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="input-group full-width">
+                            <label>Property Images</label>
+                            <div class="custom-file-upload">
+                                <input type="file" id="images" accept="image/*" multiple hidden>
+                                <label for="images" class="file-label">
+                                    <i class="fas fa-images"></i>
+                                    <span>Select Property Photos</span>
+                                    <small>JPG, PNG allowed (Multiple)</small>
+                                </label>
+                            </div>
+                            <div id="image-preview" class="preview-grid"></div>
+                        </div>
+
+                        <div class="checkbox-group full-width">
+                            <input type="checkbox" id="is_sold">
+                            <label for="is_sold">Mark this property as Sold</label>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" id="cancel-modal">Cancel</button>
+                        <button type="submit" class="btn-primary" id="save-btn">Save Property</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="scripts/admin.js"></script>
+</body>
+</html>
