@@ -327,3 +327,30 @@
 .read-more-btn:hover {
     color: #1a1a1a;
 }
+.seo-property-content {
+    padding: 50px 20px;
+    background: #ffffff;
+}
+
+.seo-property-content h2 {
+    margin-bottom: 15px;
+}
+
+.seo-property-content p {
+    line-height: 1.7;
+    max-width: 900px;
+}
+
+.seo-property-item {
+    padding: 22px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.seo-property-item h3 {
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+.seo-property-item ul {
+    padding-left: 20px;
+        }
