@@ -1,33 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset 
-xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <url>
-    <loc>https://noahkiweewa.com/</loc>
-    <lastmod>2026-05-11</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
+<urlset
+    xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+    xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 
-  <url>
-    <loc>https://noahkiweewa.com/about.html</loc>
-    <lastmod>2026-05-11</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
+    <!-- Home -->
+    <url>
+        <loc>https://noahkiweewa.com/</loc>
+        <lastmod>2026-05-22</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1.0</priority>
 
-  <url>
-    <loc>https://noahkiweewa.com/gallery.html</loc>
-    <lastmod>2026-05-11</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
+        <image:image>
+            <image:loc>https://noahkiweewa.com/images/preview.jpg</image:loc>
+            <image:title>Noah Kiweewa Real Estate Uganda</image:title>
+            <image:caption>Premium houses, land and commercial properties in Uganda</image:caption>
+        </image:image>
+    </url>
 
-  <url>
-    <loc>https://noahkiweewa.com/contact.html</loc>
-    <lastmod>2026-05-11</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
+    <!-- About -->
+    <url>
+        <loc>https://noahkiweewa.com/about.html</loc>
+        <lastmod>2026-05-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+
+        <image:image>
+            <image:loc>https://noahkiweewa.com/images/preview.jpg</image:loc>
+            <image:title>About Noah Kiweewa</image:title>
+            <image:caption>Trusted real estate agent in Uganda</image:caption>
+        </image:image>
+    </url>
+
+    <!-- Gallery -->
+    <url>
+        <loc>https://noahkiweewa.com/gallery.html</loc>
+        <lastmod>2026-05-22</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.9</priority>
+
+        <image:image>
+            <image:loc>https://noahkiweewa.com/images/preview.jpg</image:loc>
+            <image:title>Property Gallery Uganda</image:title>
+            <image:caption>Browse houses, land, apartments, schools, factories and commercial properties in Uganda</image:caption>
+        </image:image>
+    </url>
+
+    <!-- Contact -->
+    <url>
+        <loc>https://noahkiweewa.com/contact.html</loc>
+        <lastmod>2026-05-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+
+        <image:image>
+            <image:loc>https://noahkiweewa.com/images/preview.jpg</image:loc>
+            <image:title>Contact Noah Kiweewa</image:title>
+            <image:caption>Get in touch for houses, land and commercial property in Uganda</image:caption>
+        </image:image>
+    </url>
 
 </urlset>
