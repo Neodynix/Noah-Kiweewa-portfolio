@@ -366,3 +366,67 @@
 .seo-property-item ul {
     padding-left: 20px;
         }
+/* Real image tags inside slider for Google Image SEO */
+.slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Highlight property opened from Google/Search URL */
+.highlighted-property {
+    border: 2px solid gold;
+    animation: propertyGlow 1s ease-in-out infinite alternate;
+}
+
+@keyframes propertyGlow {
+    from {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(1.02);
+    }
+}
+
+/* Recommendation labels */
+.property-section-label {
+    background: #0b1f33;
+    color: white;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.property-section-label.main-property {
+    background: gold;
+    color: #0b1f33;
+}
+
+/* Recommendation notice */
+#recommendation-notice {
+    background: #0b1f33;
+    color: white;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.recommendation-notice-content {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.recommendation-notice-content i {
+    font-size: 1.5rem;
+    color: gold;
+    margin-top: 3px;
+}
+
+.recommendation-notice-content p {
+    margin-top: 5px;
+    opacity: 0.9;
+    line-height: 1.5;
+}
