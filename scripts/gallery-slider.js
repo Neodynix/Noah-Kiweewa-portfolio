@@ -1,6 +1,7 @@
 // scripts/gallery-slider.js - SEO Optimized Property System (Cloudflare + Supabase)
 
 let sliderIntervals = [];
+let ALL_PROPERTIES = []; // 🔥 IMPORTANT: safe global reference
 
 /* =========================
    SLUG SYSTEM
@@ -14,7 +15,7 @@ function slugify(text) {
         .replace(/(^-|-$)/g, '');
 }
 
-/* UNIQUE SEO SLUG */
+/* Unique SEO slug per property */
 function generateSlug(p) {
     return slugify(`${p.type || 'property'}-${p.location || 'uganda'}-${p.id}`);
 }
@@ -36,6 +37,15 @@ function generateSEOTitle(p) {
 }
 
 /* =========================
+   GET SLUG FROM URL
+========================= */
+
+function getPropertySlug() {
+    const match = window.location.pathname.match(/^\/property\/(.+)/);
+    return match ? match[1] : null;
+}
+
+/* =========================
    FIND PROPERTY FROM SLUG
 ========================= */
 
@@ -48,6 +58,9 @@ function findPropertyBySlug(properties, slug) {
 ========================= */
 
 function renderProperties(properties) {
+
+    ALL_PROPERTIES = properties; // 🔥 keep reference updated
+
     const grid = document.getElementById('properties-grid') ||
                  document.getElementById('featured-grid');
 
@@ -73,16 +86,7 @@ function renderProperties(properties) {
     });
 
     initSliders();
-    openPropertyFromURL(properties);
-}
-
-/* =========================
-   GET SLUG FROM URL
-========================= */
-
-function getPropertySlug() {
-    const match = window.location.pathname.match(/^\/property\/(.+)/);
-    return match ? match[1] : null;
+    openPropertyFromURL();
 }
 
 /* =========================
@@ -107,13 +111,11 @@ function createPropertyCard(p) {
 
     const propertyUrl = `/property/${slug}`;
 
-    const slidesHtml = imgs.length
-        ? imgs.map((img, i) => `
-            <div class="slide ${i === 0 ? 'active' : ''}">
-                <img src="${escapeText(img)}" alt="${title}">
-            </div>
-        `).join('')
-        : '';
+    const slidesHtml = imgs.map((img, i) => `
+        <div class="slide ${i === 0 ? 'active' : ''}">
+            <img src="${escapeText(img)}" alt="${title}">
+        </div>
+    `).join('');
 
     card.innerHTML = `
         <div class="property-image-container">
@@ -124,6 +126,7 @@ function createPropertyCard(p) {
 
         <div class="property-info">
             <h3>${title}</h3>
+
             <div class="location">${location}</div>
             <div class="price">${price}</div>
 
@@ -138,29 +141,29 @@ function createPropertyCard(p) {
         </div>
     `;
 
-    /* NAVIGATION */
+    /* NAVIGATION (SEO URL) */
     card.addEventListener('click', () => {
         history.pushState({}, '', propertyUrl);
-        renderProperties(allProperties);
+        renderProperties(ALL_PROPERTIES);
     });
 
     return card;
 }
 
 /* =========================
-   URL LOAD FIX (IMPORTANT)
+   URL OPEN LOGIC (FIXED)
 ========================= */
 
-function openPropertyFromURL(properties) {
+function openPropertyFromURL() {
     const slug = getPropertySlug();
-    if (!slug) return;
+    if (!slug || !ALL_PROPERTIES.length) return;
 
-    const found = findPropertyBySlug(properties, slug);
+    const found = findPropertyBySlug(ALL_PROPERTIES, slug);
     if (!found) return;
 
     setTimeout(() => {
         const card = document.querySelector(
-            `.property-card[data-id="${found.id}"]`
+            `.property-card[data-id="${CSS.escape(String(found.id))}"]`
         );
 
         if (!card) return;
@@ -170,13 +173,13 @@ function openPropertyFromURL(properties) {
 
         setTimeout(() => {
             card.classList.remove('highlighted-property');
-        }, 3000);
+        }, 4000);
 
     }, 500);
 }
 
 /* =========================
-   SEO CONTENT (HIDDEN SAFE MODE)
+   SEO CONTENT (SAFE + LIGHT)
 ========================= */
 
 function updateSEOContent(properties) {
@@ -185,10 +188,9 @@ function updateSEOContent(properties) {
     if (!seoSection) {
         seoSection = document.createElement('section');
         seoSection.id = 'seo-property-content';
-        seoSection.style.display = 'none'; // 🔥 IMPORTANT FIX
 
         seoSection.innerHTML = `
-            <h2>Real Estate Uganda</h2>
+            <h2>Real Estate in Uganda</h2>
             <div id="seo-properties-list"></div>
         `;
 
@@ -206,10 +208,11 @@ function updateSEOContent(properties) {
 }
 
 /* =========================
-   SCHEMA
+   SCHEMA (WITH MULTIPLE IMAGES FIX)
 ========================= */
 
 function addPropertySchema(properties) {
+
     const existing = document.getElementById('property-schema');
     if (existing) existing.remove();
 
@@ -222,9 +225,7 @@ function addPropertySchema(properties) {
 
             const images = Array.isArray(p.images)
                 ? p.images
-                : [];
-
-            const url = `https://noahkiweewa.com/property/${generateSlug(p)}`;
+                : (typeof p.images === 'string' ? [p.images] : []);
 
             return {
                 "@type": "ListItem",
@@ -234,8 +235,8 @@ function addPropertySchema(properties) {
                     "name": generateSEOTitle(p),
                     "description": p.description || "",
                     "identifier": String(p.id),
-                    "image": images,
-                    "url": url,
+                    "image": images, // ✅ MULTIPLE IMAGES FIXED
+                    "url": `https://noahkiweewa.com/property/${generateSlug(p)}`,
                     "address": {
                         "@type": "PostalAddress",
                         "addressCountry": "UG",
@@ -268,7 +269,7 @@ function escapeText(value) {
 }
 
 /* =========================
-   SLIDER
+   SLIDERS
 ========================= */
 
 function initSliders() {
@@ -285,10 +286,6 @@ function initSliders() {
         sliderIntervals.push(interval);
     });
 }
-
-/* =========================
-   SLIDE CONTROL
-========================= */
 
 window.changeSlide = function(id, dir) {
     const card = document.querySelector(
@@ -310,11 +307,14 @@ window.changeSlide = function(id, dir) {
 };
 
 /* =========================
-   WHATSAPP
+   WHATSAPP FIXED
 ========================= */
 
 window.orderViaWhatsApp = function(id, title, type, location, price) {
-    const link = `https://noahkiweewa.com/property/${generateSlug({id, type, location})}`;
+
+    const link = `https://noahkiweewa.com/property/${generateSlug({
+        id, type, location
+    })}`;
 
     const msg = `
 🏡 ${title}
@@ -326,5 +326,8 @@ window.orderViaWhatsApp = function(id, title, type, location, price) {
 Interested in this property.
 `;
 
-    window.open(`https://wa.me/256772492207?text=${encodeURIComponent(msg)}`, '_blank');
+    window.open(
+        `https://wa.me/256772492207?text=${encodeURIComponent(msg)}`,
+        '_blank'
+    );
 };
