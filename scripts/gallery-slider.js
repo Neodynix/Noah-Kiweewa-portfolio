@@ -3,7 +3,7 @@
 let sliderIntervals = [];
 
 /* =========================
-   SLUG SYSTEM (FIXED)
+   SLUG SYSTEM
 ========================= */
 
 function slugify(text) {
@@ -14,23 +14,13 @@ function slugify(text) {
         .replace(/(^-|-$)/g, '');
 }
 
-/* 🔥 FIX: include ID so every URL is UNIQUE */
+/* UNIQUE SEO SLUG */
 function generateSlug(p) {
     return slugify(`${p.type || 'property'}-${p.location || 'uganda'}-${p.id}`);
 }
 
-function getPropertySlug() {
-    const match = window.location.pathname.match(/^\/property\/(.+)/);
-    return match ? match[1] : null;
-}
-
-/* 🔥 FIX: proper reverse lookup */
-function findPropertyBySlug(properties, slug) {
-    return properties.find(p => generateSlug(p) === slug);
-}
-
 /* =========================
-   SEO TITLE GENERATOR
+   SEO TITLE
 ========================= */
 
 function generateSEOTitle(p) {
@@ -39,10 +29,18 @@ function generateSEOTitle(p) {
 
     if (type.includes('land')) return `Land for Sale in ${location}`;
     if (type.includes('house')) return `House for Sale in ${location}`;
-    if (type.includes('apartment')) return `Apartment in ${location}`;
+    if (type.includes('apartment')) return `Apartment for Sale in ${location}`;
     if (type.includes('commercial')) return `Commercial Property in ${location}`;
 
     return `${p.type || 'Property'} for Sale in ${location}`;
+}
+
+/* =========================
+   FIND PROPERTY FROM SLUG
+========================= */
+
+function findPropertyBySlug(properties, slug) {
+    return properties.find(p => generateSlug(p) === slug);
 }
 
 /* =========================
@@ -67,52 +65,24 @@ function renderProperties(properties) {
     const selected = slug ? findPropertyBySlug(properties, slug) : null;
 
     const finalProperties = selected
-        ? [selected, ...properties.filter(p => p !== selected)]
-        : handlePropertyMode(properties);
+        ? [selected, ...properties.filter(p => p.id !== selected.id)]
+        : properties;
 
     finalProperties.forEach(p => {
         grid.appendChild(createPropertyCard(p));
     });
 
     initSliders();
-    openPropertyFromURL(selected);
+    openPropertyFromURL(properties);
 }
 
 /* =========================
-   RECOMMENDATION SYSTEM
+   GET SLUG FROM URL
 ========================= */
 
-function handlePropertyMode(properties) {
-    const params = new URLSearchParams(window.location.search);
-    const propertyId = params.get('property');
-
-    if (!propertyId) return properties;
-
-    const selected = properties.find(p => String(p.id) === String(propertyId));
-
-    if (!selected) return properties;
-
-    const location = (selected.location || '').toLowerCase().trim();
-    const type = (selected.type || '').toLowerCase().trim();
-
-    const sameArea = properties.filter(p =>
-        String(p.id) !== propertyId &&
-        (p.location || '').toLowerCase().trim() === location
-    );
-
-    const sameCategory = properties.filter(p =>
-        String(p.id) !== propertyId &&
-        (p.type || '').toLowerCase().trim() === type &&
-        (p.location || '').toLowerCase().trim() !== location
-    );
-
-    const others = properties.filter(p =>
-        String(p.id) !== propertyId &&
-        !sameArea.includes(p) &&
-        !sameCategory.includes(p)
-    );
-
-    return [selected, ...sameArea, ...sameCategory, ...others];
+function getPropertySlug() {
+    const match = window.location.pathname.match(/^\/property\/(.+)/);
+    return match ? match[1] : null;
 }
 
 /* =========================
@@ -124,28 +94,26 @@ function createPropertyCard(p) {
     card.className = `property-card ${p.is_sold ? 'sold-out' : ''}`;
     card.setAttribute('data-id', p.id);
 
-    let imgs = Array.isArray(p.images)
+    const imgs = Array.isArray(p.images)
         ? p.images
-        : (typeof p.images === 'string' ? [p.images] : [
-            'https://via.placeholder.com/600x400?text=Real+Estate'
-        ]);
+        : (typeof p.images === 'string' ? [p.images] : []);
 
     const seoTitle = generateSEOTitle(p);
     const slug = generateSlug(p);
 
-    const title = escapeText(p.title || seoTitle);
+    const title = escapeText(seoTitle);
     const location = escapeText(p.location || 'Uganda');
     const price = escapeText(p.price || 'Contact for Price');
 
-    const isLong = (p.description || '').length > 100;
-
     const propertyUrl = `/property/${slug}`;
 
-    const slidesHtml = imgs.map((img, i) => `
-        <div class="slide ${i === 0 ? 'active' : ''}">
-            <img src="${escapeText(img)}" alt="${title}">
-        </div>
-    `).join('');
+    const slidesHtml = imgs.length
+        ? imgs.map((img, i) => `
+            <div class="slide ${i === 0 ? 'active' : ''}">
+                <img src="${escapeText(img)}" alt="${title}">
+            </div>
+        `).join('')
+        : '';
 
     card.innerHTML = `
         <div class="property-image-container">
@@ -156,11 +124,10 @@ function createPropertyCard(p) {
 
         <div class="property-info">
             <h3>${title}</h3>
-
             <div class="location">${location}</div>
             <div class="price">${price}</div>
 
-            <p class="description ${isLong ? 'truncate' : ''}">
+            <p class="description">
                 ${escapeText(p.description || '')}
             </p>
 
@@ -171,7 +138,7 @@ function createPropertyCard(p) {
         </div>
     `;
 
-    /* SEO NAVIGATION */
+    /* NAVIGATION */
     card.addEventListener('click', () => {
         history.pushState({}, '', propertyUrl);
         renderProperties(allProperties);
@@ -181,42 +148,35 @@ function createPropertyCard(p) {
 }
 
 /* =========================
-   URL HANDLING (FIXED)
+   URL LOAD FIX (IMPORTANT)
 ========================= */
 
-function openPropertyFromURL(selected) {
+function openPropertyFromURL(properties) {
     const slug = getPropertySlug();
-    const id = new URLSearchParams(window.location.search).get('property');
+    if (!slug) return;
 
-    let targetId = id;
-
-    if (!targetId && slug && allProperties) {
-        const found = findPropertyBySlug(allProperties, slug);
-        if (found) targetId = found.id;
-    }
-
-    if (!targetId) return;
+    const found = findPropertyBySlug(properties, slug);
+    if (!found) return;
 
     setTimeout(() => {
         const card = document.querySelector(
-            `.property-card[data-id="${CSS.escape(String(targetId))}"]`
+            `.property-card[data-id="${found.id}"]`
         );
 
         if (!card) return;
 
         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
         card.classList.add('highlighted-property');
 
         setTimeout(() => {
             card.classList.remove('highlighted-property');
-        }, 5000);
+        }, 3000);
 
     }, 500);
 }
 
 /* =========================
-   SEO CONTENT
+   SEO CONTENT (HIDDEN SAFE MODE)
 ========================= */
 
 function updateSEOContent(properties) {
@@ -225,10 +185,10 @@ function updateSEOContent(properties) {
     if (!seoSection) {
         seoSection = document.createElement('section');
         seoSection.id = 'seo-property-content';
+        seoSection.style.display = 'none'; // 🔥 IMPORTANT FIX
 
         seoSection.innerHTML = `
-            <h2>Real Estate in Uganda</h2>
-            <p>Buy and sell houses, land, apartments and commercial properties.</p>
+            <h2>Real Estate Uganda</h2>
             <div id="seo-properties-list"></div>
         `;
 
@@ -246,7 +206,7 @@ function updateSEOContent(properties) {
 }
 
 /* =========================
-   SCHEMA (FIXED)
+   SCHEMA
 ========================= */
 
 function addPropertySchema(properties) {
@@ -262,7 +222,7 @@ function addPropertySchema(properties) {
 
             const images = Array.isArray(p.images)
                 ? p.images
-                : [p.images].filter(Boolean);
+                : [];
 
             const url = `https://noahkiweewa.com/property/${generateSlug(p)}`;
 
@@ -273,7 +233,7 @@ function addPropertySchema(properties) {
                     "@type": "Residence",
                     "name": generateSEOTitle(p),
                     "description": p.description || "",
-                    "identifier": String(p.id || ""),
+                    "identifier": String(p.id),
                     "image": images,
                     "url": url,
                     "address": {
@@ -295,7 +255,7 @@ function addPropertySchema(properties) {
 }
 
 /* =========================
-   UTILITIES
+   UTIL
 ========================= */
 
 function escapeText(value) {
@@ -308,7 +268,7 @@ function escapeText(value) {
 }
 
 /* =========================
-   SLIDERS
+   SLIDER
 ========================= */
 
 function initSliders() {
@@ -325,6 +285,10 @@ function initSliders() {
         sliderIntervals.push(interval);
     });
 }
+
+/* =========================
+   SLIDE CONTROL
+========================= */
 
 window.changeSlide = function(id, dir) {
     const card = document.querySelector(
@@ -350,7 +314,7 @@ window.changeSlide = function(id, dir) {
 ========================= */
 
 window.orderViaWhatsApp = function(id, title, type, location, price) {
-    const link = `https://noahkiweewa.com/property/${generateSlug({id,title,type,location})}`;
+    const link = `https://noahkiweewa.com/property/${generateSlug({id, type, location})}`;
 
     const msg = `
 🏡 ${title}
