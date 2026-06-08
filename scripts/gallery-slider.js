@@ -406,77 +406,60 @@ function updateSEOContent(properties) {
 
 function addPropertySchema(properties) {
     const existing = document.getElementById('property-schema');
-
     if (existing) existing.remove();
 
     const schema = {
         "@context": "https://schema.org",
-
         "@type": "ItemList",
-
         "name": "Real Estate Properties in Uganda",
-
         "description":
-            "Houses, land, apartments, condominiums, factories, schools, farms and commercial properties across Uganda by Noah Kiweewa.",
-
+            "Houses, land, apartments, condominiums, farms, and commercial properties across Uganda.",
         "url": "https://noahkiweewa.com/gallery.html",
 
         "itemListElement": properties.slice(0, 30).map((p, index) => {
-
             const images = Array.isArray(p.images)
                 ? p.images
                 : [p.images].filter(Boolean);
 
             return {
                 "@type": "ListItem",
-
                 "position": index + 1,
 
                 "item": {
-                    "@type": "Product",
+                    "@type": "Residence",   // ✅ BEST FOR REAL ESTATE
 
                     "name": p.title || "Property in Uganda",
-
                     "description":
                         p.description ||
                         "Real estate property listing in Uganda.",
 
-                    "sku": String(p.id || ""),
+                    "identifier": String(p.id || ""),
 
                     "image":
                         images.length
                             ? images
                             : ["https://noahkiweewa.com/images/preview.jpg"],
 
-                    "category": p.type || "Real Estate",
-
                     "url":
                         `https://noahkiweewa.com/gallery.html?property=${encodeURIComponent(p.id || '')}`,
 
-                    "brand": {
-                        "@type": "Brand",
-                        "name": "Noah Kiweewa Real Estate"
+                    "address": {
+                        "@type": "PostalAddress",
+                        "addressCountry": "UG",
+                        "addressLocality": p.location || "Uganda"
                     },
 
                     "offers": {
                         "@type": "Offer",
-
                         "priceCurrency": "UGX",
-
                         "price": cleanPriceForSchema(p.price),
 
-                        "availability":
-                            p.is_sold
-                                ? "https://schema.org/SoldOut"
-                                : "https://schema.org/InStock",
+                        "availability": p.is_sold
+                            ? "https://schema.org/SoldOut"
+                            : "https://schema.org/InStock",
 
                         "url":
-                            `https://noahkiweewa.com/gallery.html?property=${encodeURIComponent(p.id || '')}`
-                    },
-
-                    "areaServed": {
-                        "@type": "Country",
-                        "name": "Uganda"
+                            `https://noahkiweewa.com/gallery.html?property=${encodeURIComponent(p.id || ''))`
                     }
                 }
             };
@@ -484,15 +467,12 @@ function addPropertySchema(properties) {
     };
 
     const script = document.createElement('script');
-
     script.type = 'application/ld+json';
-
     script.id = 'property-schema';
-
     script.textContent = JSON.stringify(schema);
 
     document.head.appendChild(script);
-}
+                                                       }
 
 function cleanPriceForSchema(price) {
     if (!price) return "0";
