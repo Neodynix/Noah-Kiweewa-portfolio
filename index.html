@@ -2,7 +2,9 @@
 <html lang="en">
   <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Improved viewport for modern edge-to-edge mobile screens -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
 
   <title>Real Estate Agent in Uganda | Houses, Land & Commercial Property | Noah Kiweewa</title>
 
@@ -11,11 +13,16 @@
   <meta name="author" content="Noah Kiweewa">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
   <meta name="theme-color" content="#0b1f33">
-<meta name="googlebot" content="index, follow, max-image-preview:large">
+  <meta name="googlebot" content="index, follow, max-image-preview:large">
+  
   <link rel="canonical" href="https://noahkiweewa.com/">
 
   <link rel="icon" type="image/png" href="https://noahkiweewa.com/images/favicon.png">
   <link rel="apple-touch-icon" href="https://noahkiweewa.com/images/favicon.png">
+
+  <!-- Performance: Preload critical stylesheets -->
+  <link rel="preload" href="/styles/mains.css" as="style">
+  <link rel="preload" href="/styles/home.css" as="style">
 
   <meta property="og:type" content="website">
   <meta property="og:title" content="Noah Kiweewa | Trusted Real Estate Agent in Uganda">
@@ -47,6 +54,21 @@
     "logo": "https://noahkiweewa.com/images/favicon.png",
     "description": "Noah Kiweewa provides real estate services for houses, land, apartments, rental properties and commercial properties across Uganda.",
     "telephone": "+256701492207",
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "telephone": "+256701492207",
+        "contactType": "Customer Support",
+        "description": "Direct Voice Calls"
+      },
+      {
+        "@type": "ContactPoint",
+        "telephone": "+256772492207",
+        "contactType": "Sales",
+        "description": "WhatsApp Inquiries",
+        "contactOption": "TollFree"
+      }
+    ],
     "email": "noah.nanyonjo2017@gmail.com",
     "priceRange": "$$",
     "address": {
@@ -76,6 +98,7 @@
       "Real estate investment in Uganda"
     ],
     "sameAs": [
+      "https://wa.me/256772492207",
       "https://www.facebook.com/noahkiweewa",
       "https://www.instagram.com/noahkiweewa",
       "https://www.x.com/noahkiweewa"
@@ -93,6 +116,14 @@
     "publisher": {
       "@type": "RealEstateAgent",
       "name": "Noah Kiweewa"
+    },
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://noahkiweewa.com/gallery.html?search={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
     }
   }
   </script>
