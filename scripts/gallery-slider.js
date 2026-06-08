@@ -3,7 +3,7 @@
 let sliderIntervals = [];
 
 /* =========================
-   SLUG SYSTEM
+   SLUG SYSTEM (FIXED)
 ========================= */
 
 function slugify(text) {
@@ -14,42 +14,35 @@ function slugify(text) {
         .replace(/(^-|-$)/g, '');
 }
 
+/* 🔥 FIX: include ID so every URL is UNIQUE */
+function generateSlug(p) {
+    return slugify(`${p.type || 'property'}-${p.location || 'uganda'}-${p.id}`);
+}
+
 function getPropertySlug() {
     const match = window.location.pathname.match(/^\/property\/(.+)/);
     return match ? match[1] : null;
 }
 
+/* 🔥 FIX: proper reverse lookup */
 function findPropertyBySlug(properties, slug) {
-    return properties.find(p =>
-        slugify(generateSEOTitle(p)) === slug
-    );
+    return properties.find(p => generateSlug(p) === slug);
 }
 
 /* =========================
-   SEO TITLE GENERATOR (IMPORTANT)
+   SEO TITLE GENERATOR
 ========================= */
 
 function generateSEOTitle(p) {
     const type = (p.type || '').toLowerCase();
     const location = p.location || 'Uganda';
 
-    if (type.includes('land')) {
-        return `Prime Land for Sale in ${location}`;
-    }
+    if (type.includes('land')) return `Land for Sale in ${location}`;
+    if (type.includes('house')) return `House for Sale in ${location}`;
+    if (type.includes('apartment')) return `Apartment in ${location}`;
+    if (type.includes('commercial')) return `Commercial Property in ${location}`;
 
-    if (type.includes('house')) {
-        return `Luxury House in ${location}`;
-    }
-
-    if (type.includes('apartment')) {
-        return `Modern Apartment in ${location}`;
-    }
-
-    if (type.includes('commercial')) {
-        return `Commercial Property in ${location}`;
-    }
-
-    return `${p.type || 'Property'} in ${location}`;
+    return `${p.type || 'Property'} for Sale in ${location}`;
 }
 
 /* =========================
@@ -78,12 +71,11 @@ function renderProperties(properties) {
         : handlePropertyMode(properties);
 
     finalProperties.forEach(p => {
-        const card = createPropertyCard(p);
-        grid.appendChild(card);
+        grid.appendChild(createPropertyCard(p));
     });
 
     initSliders();
-    openPropertyFromURL();
+    openPropertyFromURL(selected);
 }
 
 /* =========================
@@ -96,28 +88,26 @@ function handlePropertyMode(properties) {
 
     if (!propertyId) return properties;
 
-    const selected = properties.find(
-        p => String(p.id) === String(propertyId)
-    );
+    const selected = properties.find(p => String(p.id) === String(propertyId));
 
     if (!selected) return properties;
 
-    const selectedLocation = String(selected.location || '').toLowerCase().trim();
-    const selectedType = String(selected.type || '').toLowerCase().trim();
+    const location = (selected.location || '').toLowerCase().trim();
+    const type = (selected.type || '').toLowerCase().trim();
 
     const sameArea = properties.filter(p =>
-        String(p.id) !== String(propertyId) &&
-        String(p.location || '').toLowerCase().trim() === selectedLocation
+        String(p.id) !== propertyId &&
+        (p.location || '').toLowerCase().trim() === location
     );
 
     const sameCategory = properties.filter(p =>
-        String(p.id) !== String(propertyId) &&
-        String(p.type || '').toLowerCase().trim() === selectedType &&
-        String(p.location || '').toLowerCase().trim() !== selectedLocation
+        String(p.id) !== propertyId &&
+        (p.type || '').toLowerCase().trim() === type &&
+        (p.location || '').toLowerCase().trim() !== location
     );
 
     const others = properties.filter(p =>
-        String(p.id) !== String(propertyId) &&
+        String(p.id) !== propertyId &&
         !sameArea.includes(p) &&
         !sameCategory.includes(p)
     );
@@ -134,77 +124,54 @@ function createPropertyCard(p) {
     card.className = `property-card ${p.is_sold ? 'sold-out' : ''}`;
     card.setAttribute('data-id', p.id);
 
-    let imgs = [];
-
-    if (Array.isArray(p.images) && p.images.length > 0) {
-        imgs = p.images;
-    } else if (typeof p.images === 'string') {
-        imgs = [p.images];
-    } else {
-        imgs = ['https://via.placeholder.com/600x400?text=Real+Estate'];
-    }
+    let imgs = Array.isArray(p.images)
+        ? p.images
+        : (typeof p.images === 'string' ? [p.images] : [
+            'https://via.placeholder.com/600x400?text=Real+Estate'
+        ]);
 
     const seoTitle = generateSEOTitle(p);
-    const cleanTitle = escapeText(seoTitle);
+    const slug = generateSlug(p);
 
-    const propertyType = escapeText(p.type || 'Property');
+    const title = escapeText(p.title || seoTitle);
     const location = escapeText(p.location || 'Uganda');
     const price = escapeText(p.price || 'Contact for Price');
-    const propertyId = escapeText(p.id || '');
 
     const isLong = (p.description || '').length > 100;
 
-    const slug = slugify(seoTitle);
     const propertyUrl = `/property/${slug}`;
 
     const slidesHtml = imgs.map((img, i) => `
         <div class="slide ${i === 0 ? 'active' : ''}">
-            <img src="${escapeText(img)}" alt="${cleanTitle}">
+            <img src="${escapeText(img)}" alt="${title}">
         </div>
     `).join('');
 
     card.innerHTML = `
         <div class="property-image-container">
-
             <div class="slides-wrapper">
                 ${slidesHtml}
             </div>
-
-            ${imgs.length > 1 ? `
-                <div class="slider-controls">
-                    <button onclick="event.stopPropagation(); changeSlide('${p.id}', -1)">‹</button>
-                    <button onclick="event.stopPropagation(); changeSlide('${p.id}', 1)">›</button>
-                </div>
-            ` : ''}
-
         </div>
 
         <div class="property-info">
-
-            <h3>${cleanTitle}</h3>
+            <h3>${title}</h3>
 
             <div class="location">${location}</div>
-
             <div class="price">${price}</div>
 
             <p class="description ${isLong ? 'truncate' : ''}">
                 ${escapeText(p.description || '')}
             </p>
 
-            <button
-                class="order-btn"
-                onclick="event.stopPropagation(); orderViaWhatsApp('${propertyId}','${cleanTitle}','${propertyType}','${location}','${price}')"
-            >
+            <button class="order-btn"
+                onclick="event.stopPropagation(); orderViaWhatsApp('${p.id}','${title}','${p.type}','${location}','${price}')">
                 WhatsApp Inquiry
             </button>
-
         </div>
     `;
 
-    /* =========================
-       SEO NAVIGATION
-    ========================= */
-
+    /* SEO NAVIGATION */
     card.addEventListener('click', () => {
         history.pushState({}, '', propertyUrl);
         renderProperties(allProperties);
@@ -214,20 +181,25 @@ function createPropertyCard(p) {
 }
 
 /* =========================
-   URL HANDLING
+   URL HANDLING (FIXED)
 ========================= */
 
-function openPropertyFromURL() {
+function openPropertyFromURL(selected) {
     const slug = getPropertySlug();
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get('property');
+    const id = new URLSearchParams(window.location.search).get('property');
 
-    const target = slug || id;
-    if (!target) return;
+    let targetId = id;
+
+    if (!targetId && slug && allProperties) {
+        const found = findPropertyBySlug(allProperties, slug);
+        if (found) targetId = found.id;
+    }
+
+    if (!targetId) return;
 
     setTimeout(() => {
         const card = document.querySelector(
-            `.property-card[data-id="${CSS.escape(target)}"]`
+            `.property-card[data-id="${CSS.escape(String(targetId))}"]`
         );
 
         if (!card) return;
@@ -256,7 +228,7 @@ function updateSEOContent(properties) {
 
         seoSection.innerHTML = `
             <h2>Real Estate in Uganda</h2>
-            <p>Buy and sell houses, land, apartments and commercial properties across Uganda.</p>
+            <p>Buy and sell houses, land, apartments and commercial properties.</p>
             <div id="seo-properties-list"></div>
         `;
 
@@ -274,7 +246,7 @@ function updateSEOContent(properties) {
 }
 
 /* =========================
-   SCHEMA (SEO FIXED)
+   SCHEMA (FIXED)
 ========================= */
 
 function addPropertySchema(properties) {
@@ -292,21 +264,18 @@ function addPropertySchema(properties) {
                 ? p.images
                 : [p.images].filter(Boolean);
 
-            const seoTitle = generateSEOTitle(p);
-            const url = `https://noahkiweewa.com/property/${slugify(seoTitle)}`;
+            const url = `https://noahkiweewa.com/property/${generateSlug(p)}`;
 
             return {
                 "@type": "ListItem",
                 "position": index + 1,
-
                 "item": {
                     "@type": "Residence",
-                    "name": seoTitle,
+                    "name": generateSEOTitle(p),
                     "description": p.description || "",
                     "identifier": String(p.id || ""),
-                    "image": images.length ? images : [],
+                    "image": images,
                     "url": url,
-
                     "address": {
                         "@type": "PostalAddress",
                         "addressCountry": "UG",
@@ -381,7 +350,7 @@ window.changeSlide = function(id, dir) {
 ========================= */
 
 window.orderViaWhatsApp = function(id, title, type, location, price) {
-    const link = `https://noahkiweewa.com/property/${slugify(title)}`;
+    const link = `https://noahkiweewa.com/property/${generateSlug({id,title,type,location})}`;
 
     const msg = `
 🏡 ${title}
