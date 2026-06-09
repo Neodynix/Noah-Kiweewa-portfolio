@@ -19,10 +19,22 @@ function getPropertyIdFromURL() {
 
 function renderProperties(properties) {
     const grid = document.getElementById('properties-grid') || document.getElementById('featured-grid');
-
     if (!grid) return;
 
     grid.innerHTML = '';
+    
+    // 1. Get the ID from the URL first
+    const propertyId = getPropertyIdFromURL(); 
+    const selected = propertyId ? properties.find(p => String(p.id) === String(propertyId)) : null;
+
+    // 2. If a specific property is found, update the SEO tags dynamically
+    if (selected) {
+        updateDynamicSEO(selected);
+    } else {
+        // Optional: Reset to default gallery SEO if no property is selected
+        document.title = "Property Gallery | Noah Kiweewa Real Estate Uganda";
+        document.querySelector('link[rel="canonical"]').href = "https://noahkiweewa.com/gallery.html";
+    }
 
     updateSEOContent(properties);
     addPropertySchema(properties);
@@ -116,6 +128,7 @@ function handlePropertyMode(properties) {
         ...others
     ];
 }
+
 
 function getRecommendationLabel(p) {
     const selectedId = getPropertyIdFromURL();
@@ -422,7 +435,27 @@ function updateSEOContent(properties) {
         </article>
     `).join('');
 }
+function updateDynamicSEO(property) {
+    if (!property) return;
 
+    // Update Page Title
+    document.title = `${escapeText(property.title)} | Noah Kiweewa Real Estate`;
+
+    // Update Canonical URL
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.rel = 'canonical';
+        document.head.appendChild(canonical);
+    }
+    canonical.href = `https://noahkiweewa.com/gallery.html?property=${property.id}`;
+
+    // Update Meta Description
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+        metaDesc.content = escapeText(property.description);
+    }
+    }
 function addPropertySchema(properties) {
     const existing = document.getElementById('property-schema');
 
